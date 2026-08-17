@@ -595,7 +595,7 @@ document.getElementById('planForm').addEventListener('submit',async e=>{
    travelers:String(o.travelers), mustsee:o.must};
  let usedFallback=false;
  try{const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),60000);
-   const r=await fetch('http://localhost:8000/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:ctl.signal});
+   const r=await fetch('https://wanderlog-u89f.onrender.com/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:ctl.signal});
    clearTimeout(to);
    if(r.ok){
      const j=await r.json();
@@ -646,7 +646,7 @@ function localBrain(q){q=q.toLowerCase();
 async function sendChat(){const inp=document.getElementById('chIn'); const q=inp.value.trim(); if(!q)return; inp.value=''; say(q,'user');
  let reply=null;
  try{const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),20000);
-   const r=await fetch('http://localhost:8000/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q,itinerary:ITIN}),signal:ctl.signal});
+   const r=await fetch('https://wanderlog-u89f.onrender.com/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q,itinerary:ITIN}),signal:ctl.signal});
    if(r.ok){const j=await r.json(); reply=j.reply||j.message||null;}
  }catch(_){}
  const m=say('','bot');
