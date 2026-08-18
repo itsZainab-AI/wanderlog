@@ -209,6 +209,10 @@ main{position:relative; z-index:3; max-width:1060px; margin:0 auto; padding:6rem
 .place-card .stars{color:var(--gold); letter-spacing:.15em}
 .place-card a{color:var(--terra); text-decoration:none; letter-spacing:.18em; text-transform:uppercase; font-size:.68rem; margin-left:auto}
 .swap{position:absolute; top:1.2rem; right:1.2rem; font-size:.65rem; letter-spacing:.24em; color:var(--ink-soft); border:1px solid var(--line); padding:.3rem .7rem; transition:all .3s}
+.export-bar{display:flex; gap:.8rem; justify-content:center; margin:1.5rem 0 2.5rem; flex-wrap:wrap}
+.export-btn{font-family:inherit; font-size:.68rem; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-soft); background:transparent; border:1px solid var(--line); padding:.6rem 1.3rem; cursor:pointer; transition:all .3s}
+.export-btn:hover{color:var(--ink); border-color:var(--ink-soft)}
+.export-btn:disabled{opacity:.5; cursor:wait}
 .swap:hover{color:var(--terra); border-color:var(--terra); transform:rotate(-2deg)}
 .food{margin:2rem 0 0 3.5rem; max-width:480px; background:var(--paper); border:1px solid var(--line); border-left:3px solid var(--gold); padding:1.4rem 1.7rem; transform:rotate(-.6deg); transition:transform .35s, box-shadow .35s, background .6s}
 .food:hover{transform:rotate(0) translateY(-3px); box-shadow:var(--shadow)}
@@ -254,7 +258,7 @@ footer .hand{display:block; font-size:1.35rem; letter-spacing:0; margin-bottom:.
   .food{margin-left:0}
   .polaroid .ph{width:150px; height:105px}
 }
-@media print{ #collage,#dust,.grain,.vignette,.cursor-dot,.cursor-ring,#themeToggle,#chatBtn,#chatPanel,form,.scroll-hint{display:none!important} body{background:#fff} }
+@media print{ #collage,#dust,.grain,.vignette,.cursor-dot,.cursor-ring,#themeToggle,#chatBtn,#chatPanel,form,.scroll-hint,.export-bar{display:none!important} body{background:#fff} }
 ::view-transition-old(root),::view-transition-new(root){animation:none; mix-blend-mode:normal}
 </style>
 </head>
@@ -571,12 +575,44 @@ function render(it){ITIN=it;
    <div class="bp-route">HOME <span class="arr">✈</span> ${it.city.toUpperCase()}</div>
    <div class="bp-meta"><span>DAYS<b>${it.days.length}</b></span><span>PACE<b>${it.pace}</b></span><span>BUDGET<b>${it.budget}</b></span><span>TRAVELERS<b>${it.travelers}</b></span><span>CLASS<b>WANDER</b></span></div></div>
    <div class="bp-right"><div class="barcode"></div><div class="stamp">Approved ✦ Wanderlog</div></div></div>
+  <div class="export-bar">
+    <button id="exportPdf" class="export-btn">Save as PDF</button>
+    <button id="exportImg" class="export-btn">Download as Image</button>
+  </div>
   ${it.days.map((d,i)=>dayHTML(d,i)).join('')}`;
  results.querySelectorAll('.reveal').forEach(el=>io.observe(el));
  setTimeout(()=>results.querySelector('.bp').classList.add('stamped'),400);
  document.getElementById('chatBtn').classList.add('ping');
+ document.getElementById('exportPdf').addEventListener('click',()=>window.print());
+ document.getElementById('exportImg').addEventListener('click',exportAsImage);
 }
 
+async function exportAsImage(){
+ const btn=document.getElementById('exportImg');
+ const origText=btn.textContent;
+ btn.textContent='Preparing…'; btn.disabled=true;
+ try{
+   if(typeof html2canvas==='undefined'){
+     await new Promise((resolve,reject)=>{
+       const s=document.createElement('script');
+       s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+       s.onload=resolve; s.onerror=reject;
+       document.head.appendChild(s);
+     });
+   }
+   const target=document.getElementById('results');
+   const canvas=await html2canvas(target,{backgroundColor:'#ffffff',scale:2,useCORS:true});
+   const link=document.createElement('a');
+   link.download=`${(ITIN.city||'itinerary').toLowerCase().replace(/\s+/g,'-')}-wanderlog.png`;
+   link.href=canvas.toDataURL('image/png');
+   link.click();
+ }catch(err){
+   console.error('Image export failed:',err);
+   alert("Couldn't generate the image — check your connection and try again.");
+ }finally{
+   btn.textContent=origText; btn.disabled=false;
+ }
+}
 /* ================= LOADER + SUBMIT ================= */
 const loader=document.getElementById('loader');
 document.getElementById('planForm').addEventListener('submit',async e=>{
